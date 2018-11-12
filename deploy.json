@@ -1,0 +1,141 @@
+{
+    "Parameters": {
+        "ConfigRuleLambdaBucket": {
+            "Type": "String"
+        },
+        "ConfigRuleLambdaKey": {
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "TestTagsRuleLambda": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "test-tags-rule-lambda",
+                "Handler": "index.testTags",
+                "Code": {
+                    "S3Bucket": { "Ref": "ConfigRuleLambdaBucket" },
+                    "S3Key": { "Ref": "ConfigRuleLambdaKey" }
+                },
+                "Environment": {
+                    "Variables": {
+                        "REGION": { "Ref": "AWS::Region" }
+                    }
+                },
+                "Role": { "Fn::GetAtt": [ "ConfigRuleLambdaRole", "Arn" ] },
+                "Runtime": "nodejs8.10",
+                "Timeout": 60,
+                "Tags": [
+                    {
+                        "Key": "Platform",
+                        "Value": "Compliance"
+                    },
+                    {
+                        "Key": "ServerType",
+                        "Value": "Tags"
+                    },
+                    {
+                        "Key": "Environment",
+                        "Value": "test"
+                    }
+                ]
+            }
+        },
+        "TestTagsRule": {
+            "Type": "AWS::Config::ConfigRule",
+            "Properties": {
+                "ConfigRuleName": "test-tags-rule",
+                "Source": {
+                    "Owner": "CUSTOM_LAMBDA",
+                    "SourceDetails": [
+                        {
+                            "EventSource": "aws.config",
+                            "MessageType": "ConfigurationItemChangeNotification"
+                        },
+                        {
+                            "EventSource": "aws.config",
+                            "MessageType": "OversizedConfigurationItemChangeNotification"
+                        }
+                    ],
+                    "SourceIdentifier": { "Fn::GetAtt": [ "TestTagsRuleLambda", "Arn" ] }
+                },
+                "Scope": {
+                    "ComplianceResourceTypes": [
+                        "AWS::CloudFormation::Stack"
+                    ]
+                },
+                "InputParameters": {
+                    "TagSpecs": [
+                        {
+                            "TagKey": "Platform",
+                            "TagRegex": "[A-Za-z0-9-_ ]+",
+                            "Required": true
+                        },
+                        {
+                            "TagKey": "ServerType",
+                            "TagRegex": "[A-Za-z0-9-_ ]+"
+                        },
+                        {
+                            "TagKey": "Server Type",
+                            "TagRegex": "[A-Za-z0-9-_ ]+"
+                        },
+                        {
+                            "TagKey": "Environment",
+                            "TagRegex": "^(test|stag|prod)$",
+                            "Required": true
+                        }
+                    ]
+                }
+            }
+        },
+        "TestTagsRuleLambdaInvokePermission": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "Principal": "config.amazonaws.com",
+                "FunctionName": { "Fn::GetAtt": [ "TestTagsRuleLambda", "Arn" ] }
+            }
+        },
+        "ConfigRuleLambdaRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "RoleName": "test-tags-rule-lambda-role",
+                "AssumeRolePolicyDocument": {
+                    "Version" : "2012-10-17",
+                    "Statement": [ {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "Service": [ "lambda.amazonaws.com" ]
+                        },
+                        "Action": [ "sts:AssumeRole" ]
+                    } ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "new-pipeline-lambda-policy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "logs:CreateLogGroup",
+                                        "logs:CreateLogStream",
+                                        "logs:PutLogEvents"
+                                    ],
+                                    "Resource": "arn:aws:logs:*:*:*",
+                                    "Effect": "Allow"
+                                },
+                                {
+                                    "Action": "*",
+                                    "Resource": "*",
+                                    "Effect": "Allow"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}
