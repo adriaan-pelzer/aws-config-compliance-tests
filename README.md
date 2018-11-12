@@ -30,9 +30,9 @@ or an error, depending on its evaluation results.
 In _deploy.json_, a set of resources of type _AWS::Lambda::Function_ and _AWS::Config::ConfigRule_ should be created for your new rule. (copy these from another rule, and give them unique logical ID's).
 The following lines need to be changed:
 
-* Lambda Function
+* **Lambda Function**
     - Change the _FunctionName_ parameter to a descriptive name derived from your test name.
     - Change the _Handler_ parameter to index._rule.name_ (where _rule.name_ is whatever you named your rule in _src/compliance-rules.js_)
-* Config Rule
+* **Config Rule**
     - Change the _ConfigRuleName_ parameter to a descriptive name derived from your test name.
     - Change the _Scope.ComplianceResourceTypes_ parameter to reflect the list of resource types you want your rule to be run against. Delete the _Scope_ parameter altogether to run it against all resource types.
