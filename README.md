@@ -27,7 +27,7 @@ or an error, depending on its evaluation results.
 
 ### Create the rule and lambda function
 
-In _deploy.json_, a set of resources of type _AWS::Lambda::Function_ and _AWS::Config::ConfigRule_ should be created for your new rule. (copy these from another rule, and give them unique logical ID's).
+In _deploy.json_, a set of resources of types _AWS::Lambda::Function_, _AWS::Config::ConfigRule_ and _AWS::Lambda::Permission_ should be created for your new rule. (copy these from another rule, and give them unique logical ID's).
 The following lines need to be changed:
 
 * **Lambda Function**
